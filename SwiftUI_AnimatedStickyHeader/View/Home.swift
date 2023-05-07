@@ -38,7 +38,10 @@ struct Home: View {
     @ViewBuilder
     func HeaderView() -> some View {
         let headerHeight = (size.height * 0.3) + safeArea.top
+        let minimumHeaderHeight = 65 + safeArea.top
 
+        // ヘッダースクロール幅で、progressは 最大 0 ~ 1
+        let progress = max(0, min(-offsetY / (headerHeight - minimumHeaderHeight), 1))
         // GeometryReaderで囲まないと headerとcellの間隔が開いてしまう理由はわからない。。
         GeometryReader { _ in
             ZStack {
@@ -54,6 +57,13 @@ struct Home: View {
                             .aspectRatio(contentMode: .fill)
                             .frame(width: rect.width, height: rect.height)
                             .clipShape(Circle())
+
+                             // 最大 30%まで縮小 .leadingすることで Image Frameの.leadingへ配置される
+                            .scaleEffect(1 - progress *  0.7, anchor: .leading)
+
+                             // ヘッダー左へ アイコンを移動
+                             //         + 10は 左padding                  35は iJustine と 同じ高さに調整
+                            .offset(x: (-rect.minX + 10) * progress, y: (safeArea.top + 35) * progress)
                     }
                     .frame(width: headerHeight * 0.5, height: headerHeight * 0.5)
 
@@ -68,7 +78,7 @@ struct Home: View {
             // ヘッダーの背景を固定
             .offset(y: -offsetY)
             // スクロール量に応じてヘッダー高さを動的に変更する
-            .frame(height: getDynamicHeaderHeight(withScrollOffset: self.offsetY))
+            .frame(height: getDynamicHeaderHeight(withScrollOffset: self.offsetY), alignment: .bottom)
         }
     }
 
